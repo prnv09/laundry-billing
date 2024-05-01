@@ -30,10 +30,10 @@ def get_tbc_price_list():
 
 #Function to calculate vendor payment and remaining amount
 def calculate_payment(tbc_price,weight,customer_bill):
-    commission= tbc_price_list['commission']
+    commission= tbc_price_list['commission']/100
     print(f"commission for {login.st.session_state.loggedInUser} is {commission}")
     print(f"tbc price - {tbc_price}")
-    tbc_discount = tbc_price * 0.37
+    tbc_discount = tbc_price * commission
     order["tbc_discount"] = tbc_discount
     print(f"tbc discount {tbc_discount}")
     tbc_cost = tbc_price - tbc_discount
