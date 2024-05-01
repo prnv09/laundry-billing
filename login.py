@@ -10,10 +10,13 @@ def authenticate_user(username, password):
     users_collection = db.users
     user_data = users_collection.find_one({"username": username})
     if user_data:
+        print("User Found--------")
         if user_data["status"]=="active":
+            print("User is Active ------")
             hashed_password = user_data["password"]
             
             if bcrypt.verify(password, hashed_password):
+                print("Password matched, logging in -------")
                 st.session_state.loggedInUser = user_data['username']
                 st.session_state.loggedIn = True
                 return True
@@ -23,9 +26,12 @@ def authenticate_user(username, password):
     return False
 
 def get_logged_user():
+    print("getting logged in user info")
     if 'loggedIn' not in st.session_state:
+        print("assigning session variable to check loggedin or not")
         st.session_state.loggedIn = False
     if st.session_state.loggedIn:
+        print(f"user logged in, returning username {st.session_state.loggedInUser}")
         return True,st.session_state.loggedInUser
     else:
         return False
