@@ -15,30 +15,36 @@ tbc_price_list = {}
 order ={}
 yl_price_list={}
 conn,db = connect_to_mongodb()
-commission_per=0
+#global commission_per
 def get_tbc_price_list():
     #print(conn,db)
     #print(f"available collections - {db.list_collection_names()}")
+    print("gettinf vendor price list to display services")
     tbc_services_collection = db["tbc-services"]
     tbc_services = tbc_services_collection.find_one({"owner":login.st.session_state.loggedInUser})
     for key,value in tbc_services.items():
         tbc_price_list[key]=value
+    print(f"tbc_price_list full - {tbc_price_list}")
     tbc_price_list.pop("_id")
     tbc_price_list.pop("owner")
-    commission_per =tbc_price_list.pop("commission")
+    global commission_per 
+    commission_per=tbc_price_list.pop("commission")
+    print(f"commission percentage - {commission_per}")
+    print(f"Services from vendor list - {tbc_price_list}")
     #print(f"tbc_services -- {tbc_services}")
-
+    
 #Function to calculate vendor payment and remaining amount
 def calculate_payment(tbc_price,weight,customer_bill):
+    print(f"commission per = {commission_per}")
     commission= commission_per/100
     print(f"commission for {login.st.session_state.loggedInUser} is {commission}")
     print(f"tbc price - {tbc_price}")
     tbc_discount = tbc_price * commission
     order["tbc_discount"] = tbc_discount
-    print(f"tbc discount {tbc_discount}")
+    print(f"Vendor discount {tbc_discount}")
     tbc_cost = tbc_price - tbc_discount
     order["tbc_cost"]= tbc_cost
-    print(f"tbc_cost - {tbc_cost}")
+    print(f"Vendor_cost - {tbc_cost}")
     vendor_payment = tbc_cost * weight
     order["vendor_payment"]=vendor_payment
     print(f"total vendor payment {tbc_cost}*{weight}: {vendor_payment}")
@@ -57,20 +63,24 @@ def calculate_customer_bill(wt,service,discount_per,discount_val):
     if discount_per>0:
         discount_value = (customer_bill/100)*discount_per
         customer_bill = customer_bill-discount_value
+        print(f"discount given in percentage, bill after discount - ",{customer_bill})
     elif discount_val>0:
         customer_bill= customer_bill-discount_val
+        print(f"discount given in value, bill after discount - ",{customer_bill})
     order["customer_bill"]= customer_bill
     order['yl_service_cost'] = yl_price_list[service]
-    print(f"Customer bill = {customer_bill}")
+    #print(f"Customer bill = {customer_bill}")
      
 
 # Function to display order details
 def display_order(order):
-    st.write("Order ID:", order["order_id"])
-    st.write("Service:", order["service"])
-    #st.write("Service Cost:", order["tbc_price"])
-    st.write("Vendor Payment:", order["vendor_payment"])
-    st.write("Remaining Amount:", order["remaining_amount"])
+    st.write("Order stored :)")
+    st.write("Order ID:", order['order_id'])
+    st.write("Service:",order['service'])
+    st.write("weight/quantity:", order['weight'])
+    st.write('Total Received Amount: ', order["customer_bill"])
+    st.write('Payment to Vendor: ',order["vendor_payment"])
+    st.write('Profit on order: ',order["remaining_amount"])
     st.write("---")
 
 def generate_order_id():
@@ -95,6 +105,7 @@ def insert_record(obj,cln_name):
     collection = db[cln_name]
     result= collection.insert_one(obj)
     print(f"Inserted data in to database, Insert ID - {result.inserted_id}")
+
 #Main function to run the app
 def main():
     # st.title("Laundry Order Tracker")
@@ -138,12 +149,14 @@ def main():
         yl_price_variable = st.number_input("Enter YL bill for one quantity",key="customer_bill")
         order['yl_service_cost'] = yl_price_variable
         order["customer_bill"] = yl_price_variable * weight
+        print(f"variable order - {custom_service} - vendor price- {tbc_price}, yl price - {yl_price_variable}, total customer bill- {order['customer_bill']}")
         
     else:
         tbc_price = tbc_price_list[service]
-        
+        print(f"selected from list - {tbc_price_list[service]}")
         calculate_customer_bill(weight,service,discount_per,discount_val)
     if st.button("Add Order"):
+        print("Adding order to collection ----------")
         order['owner'] = login.st.session_state.loggedInUser
         order['customer_id'] = customer_id
         order['order_id'] = generate_order_id()
@@ -152,9 +165,13 @@ def main():
         current_date_str = datetime.datetime.now().strftime("%d-%m-%y")
         order['order_date'] = datetime.datetime.now()
         insert_record(order,'orders')
-        st.write('Total Received Amount: ', order["customer_bill"])
-        st.write('Payment to Vendor: ',order["vendor_payment"])
-        st.write('Profit on order: ',order["remaining_amount"])
+        display_order(order)
+        # st.write("Order stored :)")
+        # st.write("Service:",order['service'])
+        # st.write("weight/quantity:", order['weight'])
+        # st.write('Total Received Amount: ', order["customer_bill"])
+        # st.write('Payment to Vendor: ',order["vendor_payment"])
+        # st.write('Profit on order: ',order["remaining_amount"])
         # if tbc_price:
         #     vendor_payment, remaining_amount = calculate_payment(tbc_price,weight,customer_bill)
         # else:
