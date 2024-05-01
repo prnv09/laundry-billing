@@ -2,10 +2,11 @@ import streamlit as st
 import login
 import add_order
 import register
+import add_service
 # Define the sidebar
 st.title("You Laundry Dashboard")
 st.sidebar.title("Options")
-page = st.sidebar.radio("Go to", ["Login", "Add Order", "Register"])
+page = st.sidebar.radio("Go to", ["Login", "Add Order","Add Service","Register"])
 
 # Load the selected page
 if page == "Login":
@@ -15,6 +16,8 @@ if page == "Login":
 elif page == "Add Order":
     add_order.main()
     # Add content for Page 1
+elif page== "Add Service":
+    add_service.main()
 elif page == "Register":
     register.main()
     # Add content for Page 2
