@@ -15,18 +15,23 @@ tbc_price_list = {}
 order ={}
 yl_price_list={}
 conn,db = connect_to_mongodb()
+
 def get_tbc_price_list():
     #print(conn,db)
     #print(f"available collections - {db.list_collection_names()}")
     tbc_services_collection = db["tbc-services"]
-    tbc_services = tbc_services_collection.find_one()
+    tbc_services = tbc_services_collection.find_one({"owner":login.st.session_state.loggedInUser})
     for key,value in tbc_services.items():
         tbc_price_list[key]=value
     tbc_price_list.pop("_id")
+    #tbc_price_list.pop("owner")
+    #tbc_price_list.pop("commission")
     #print(f"tbc_services -- {tbc_services}")
 
 #Function to calculate vendor payment and remaining amount
 def calculate_payment(tbc_price,weight,customer_bill):
+    commission= tbc_price_list['commission']
+    print(f"commission for {login.st.session_state.loggedInUser} is {commission}")
     print(f"tbc price - {tbc_price}")
     tbc_discount = tbc_price * 0.37
     order["tbc_discount"] = tbc_discount
@@ -44,7 +49,7 @@ def calculate_payment(tbc_price,weight,customer_bill):
 
 def calculate_customer_bill(wt,service,discount_per,discount_val):
     yl_services_collection = db["yl-services"]
-    yl_services = yl_services_collection.find_one()
+    yl_services = yl_services_collection.find_one({"owner":login.st.session_state.loggedInUser})
     for key,value in yl_services.items():
         yl_price_list[key]=value
     yl_price_list.pop("_id")
@@ -105,7 +110,7 @@ def main():
     #while True:
     st.subheader("Add New Order")
     customer_id = st.text_input("Enter Customer ID:",key="customer_id")
-    service = st.selectbox("Select Service:", list(tbc_price_list.keys()),key="service")
+    service = st.selectbox("Select Service:", list(tbc_price_list.keys())[:-2],key="service")
     order['service']=service
     # print(tbc_price_list)
     # print(tbc_price_list.keys())
